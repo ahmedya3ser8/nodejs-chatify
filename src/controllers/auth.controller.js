@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import User from "../models/User.js";
 import sendEmail from "../mail/sendEmail.js";
 import { generateToken } from "../lib/utils.js";
+import cloudinary from "../lib/cloudinary.js";
 
 export const signup = async (req, res) => {
   const { fullName, email, password } = req.body;
@@ -93,4 +94,30 @@ export const login = async (req, res) => {
 export const logout = (_, res) => {
   res.cookie('jwt', '', { maxAge: 0 });
   res.status(200).json({ message: 'Logged out successfully' })
+}
+
+export const updateProfile = async (req, res) => {
+  try {
+    console.log('file', req.file);
+    if (!req.file) return res.status(400).json({ message: 'ProfileImage is required' });
+    
+    const userId = req.user._id;
+    
+    const uploadResponse = await cloudinary.uploader.upload(req.file.path, {
+      folder: 'chatify/users'
+    });
+    
+    const updatedUser = await User.findByIdAndUpdate(
+      userId, 
+      { profileImage: uploadResponse.secure_url }, 
+      { new: true }
+    );
+    
+    console.log('updatedUser', updatedUser);
+    res.status(200).json(updatedUser);
+
+  } catch (error) {
+    console.log('Error in update profile:', error);
+    res.status(500).json({ message: 'Internal server error' })
+  }
 }
