@@ -5,9 +5,9 @@ import cloudinary from "../lib/cloudinary.js";
 export const getAllContacts = async (req, res) => {
   try {
     const loggedInUserId = req.user._id;
-    
+
     const filteredUsers = await User.find({ _id: { $ne: loggedInUserId } }).select('-password'); // get all users not loogedIn
-    
+
     res.status(200).json(filteredUsers);
 
   } catch (error) {
@@ -41,7 +41,7 @@ export const sendMessage = async (req, res) => {
     const { id: receiverId } = req.params;
     const senderId = req.user._id;
 
-    if (!text && !image) {
+    if (!text && !req.file) {
       return res.status(400).json({ message: "Text or image is required." });
     }
     if (senderId.equals(receiverId)) {
